@@ -1,0 +1,2 @@
+"(Intercept)","s(ordinaldate, by = island, bs = ""cc"")","site","gear:island","s(date, by = island)","s(date, by = interaction(gear, island))","s(ordinaldate, bs = ""cc"")","s(date, by = gear)","s(ordinaldate, by = gear, bs = ""cc"")","s(date)","s(ordinaldate, by = interaction(gear, island), bs = ""cc"")","gear","family","df","logLik","AICc","delta","weight"
+-83.9908947839305,"+","+","+","+","+","+",NA,"+","+","+","+","Negative Binomial(0.595,log)",123,-23835.871587065,47919.4501027759,0,0.996397791680073
