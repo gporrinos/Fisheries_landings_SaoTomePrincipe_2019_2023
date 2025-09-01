@@ -117,13 +117,13 @@ dat.ntrips$gear   <- as.factor(dat.ntrips$gear)
 
 
 #########################################################################
-#                           RUN HURDLE MODEL                            #
+#                  RUN MODEL SELECTION OF HURDLE MODEL                  #
 #########################################################################
 
 
 
 
-# Run hurdle model
+# Formula of hurdle model
 poissonparameter <-   as.formula(
   ntrips ~ 
     island +
@@ -136,10 +136,7 @@ poissonparameter <-   as.formula(
     gear +
     gear:island )
 
-
 probabilityofpresence <- as.formula(~gear:site)
-
-
 
 
 
@@ -197,20 +194,18 @@ if(length(filenames)>0) {
   cl <- makeCluster(ncores)
   clusterExport(cl = cl, c("dat","directory","presence","filenames","poisson.form"))
   parLapply(cl, runmodels, function(i){
-    #    if(!file.exists(file.path(directory,filenames[i]))){
     mod     = mgcv::gam(list(as.formula(poisson.form[i]), 
                              as.formula(presence[i])),
                         data = dat,
                         family = mgcv::ziplss(),
                         method = "REML")
     saveRDS(mod,file.path(directory,filenames[i]))
-    #    }
   })
   stopCluster(cl)
 }
 
 
-
+# Load all models objects
 temp <- lapply(list.files(directory, full.names = TRUE), function(x) readRDS(x))
 
 output = data.frame(a = labels(terms(poissonparameter)))
@@ -221,7 +216,7 @@ output$'gear:site' = 1
 output$AIC = 1
 output = output[-1,]
 
-
+# Create model selection table
 modelselection <- lapply(temp, function(mod) {
   temp = c(
     unlist(lapply(labels(terms(poissonparameter)), function(x){
@@ -249,6 +244,14 @@ View(output)
 # Model 1 was removed as output showed separation.
 # After removing Model 1, Model 2 was the only one with delta AIC <6
 
+
+
+
+
+
+#########################################################################
+#                   PLOT ESTIMATES OF SELECTED MODELS                   #
+#########################################################################
 
 
 
