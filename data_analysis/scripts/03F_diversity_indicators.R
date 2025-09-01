@@ -505,14 +505,19 @@ spear_fishing_richness   <- divmods(effectlist,"richness","spear_fishing",dat)
 
 
 
-#--------------------------------------------#
-################ PLOT EFFECTS ################
-#--------------------------------------------#
+
+
+
+
+#########################################################################
+###                          GET PREDICTIONS                          ###
+#########################################################################
+
+
 
 
 ### STEP 1: FUNCTION TO CALCULATE PREDICTIONS
 predictions <- function(gear, diversityindicator){
-  
   
   # Get models
   mods        = get(paste(gear, diversityindicator, sep="_"))
@@ -680,6 +685,15 @@ predictions <- function(gear, diversityindicator){
 
 
 
+
+#########################################################################
+###                        GET SUMMED WEIGHTS                         ###
+#########################################################################
+
+
+
+
+
 getsw <- function(gear,diversityindicator){
   mods        = get(paste(gear,diversityindicator,sep="_"))
   bestmodels  = get.models(MuMIn::model.sel(mods), subset = delta < 6)
@@ -701,6 +715,9 @@ getsw <- function(gear,diversityindicator){
   names(temp) = effects[!effects %in% names(sweights)]
   sweights = c(sweights,temp)
   return(sweights)}
+
+
+
 
 allsw <- function(diversityindicator){
   gears <- c("surface_gillnet", "hook_line", "seine_net","demersal_gillnet",
@@ -740,7 +757,18 @@ write.csv(allweights, file = file.path(tables,"TableS7_SW_diversity_indicators.c
 
 
 
-### STEP 2: PLOT PREDICTIONS
+
+
+#########################################################################
+###                         PLOT PREDICTIONS                          ###
+#########################################################################
+
+
+
+
+
+
+### FUNCTION 1: SET Y LIMITS ACROSS FACETS
 set_ylims = function(dat){
   dat$ymax = dat$estimate + dat$se
   dat$ymin = dat$estimate - dat$se
@@ -760,7 +788,7 @@ set_ylims = function(dat){
 
 
 
-
+### FUNCTION 2: ROUND TO DECIMAL
 roundtodecimal <- function(dat, digits = 2) unlist(lapply(
   as.character(round(dat, digits = digits)), 
   function(x) 
@@ -770,7 +798,7 @@ roundtodecimal <- function(dat, digits = 2) unlist(lapply(
 
 
 
-
+### FUNCTION 3: PLOT ALL EFFECT TYPES
 ploteffects <- function(pred, 
                         effect,
                         nostriptext = TRUE, 
@@ -783,7 +811,7 @@ ploteffects <- function(pred,
   # Categorical effects
   categorical <- c("island", "bait_type", "bait_type:island", "gear_subtype", "propulsion")
   
-  ### PREPARE DATABASES
+  ## PREPARE DATABASES
   # Data frame of PREDICTIONS
   dat = pred[which(pred$effect %in% effect),]
   
@@ -818,7 +846,7 @@ ploteffects <- function(pred,
     }
   
   
-  ### RE-LABEL EFFECTS AND GEARS
+  ## RE-LABEL EFFECTS AND GEARS
   effectlabel =   data.frame(effects = c("date", "ordinaldate:island", "date:island", "net_depth", "net_length",
                                          "ordinaldate", "island", "mesh_size", "time_fishing", "n_fishers",
                                          "ngears", "propulsion", "time_sea", "nsets", "gear_subtype", "hook_size",
@@ -844,7 +872,7 @@ ploteffects <- function(pred,
   
   
   
-  ### PLOT CONTINUOUS VARIABLES
+  ## PLOT CONTINUOUS VARIABLES
   if(!effect %in% categorical) {
     if(grepl("island", effect)){
       dat = dat[!is.na(dat$island),]
@@ -864,7 +892,7 @@ ploteffects <- function(pred,
     }
   }
   
-  ### PLOT CATEGORICAL EFFECTS
+  ## PLOT CATEGORICAL EFFECTS
   if(effect %in% categorical) {
     if(effect == "bait_type:island"){
       dat$x[which(dat$x == "BAIT" & dat$island == "PC")] = 1
@@ -893,7 +921,7 @@ ploteffects <- function(pred,
     }
   }
   
-  ### ADD FACETS TO OUTPUT PLOT
+  ## ADD FACETS TO OUTPUT PLOT
   output = output + 
       geom_point(data = ylims, aes(x= x, y = estimate), colour = NA, fill = NA) + 
     facet_grid(gear ~ effect, scales = "free_y") +
@@ -905,7 +933,7 @@ ploteffects <- function(pred,
           legend.position = legend.position)
   
   
-  ### FORMAT X AXIS OF DATE
+  ## FORMAT X AXIS OF DATE
   if(grepl("date", paste0(effect, " "))){
     output = output + scale_x_continuous(
       breaks = as.integer(as.POSIXct(c("2020-07-02", "2021-07-02","2022-07-02", "2023-07-02"),
@@ -913,7 +941,7 @@ ploteffects <- function(pred,
       minor_breaks = startyear,  labels = c("2020", "2021", "2022", "2023")) 
   }
   
-  ### FORMAT X AXIS OF ORDINAL DATE
+  ## FORMAT X AXIS OF ORDINAL DATE
   if(grepl("ordinaldate", paste0(effect, " "))){
     output = output + scale_x_continuous(
       breaks = c(15, 46, 75, 106, 136, 167, 197, 228, 259, 289, 320, 350), 
@@ -921,7 +949,7 @@ ploteffects <- function(pred,
       labels = c("J",  "F",  "M",  "A",  "M",   "J",   "J",   "A",   "S",   "O",   "N", "D")) 
   }
 
-  ### ADD SW
+  ## ADD SW
   SW = SW[which(SW$gear %in% dat$gear & allweights$diversityindicator %in% dat$diversityindicator[1]),
                   which(colnames(allweights) %in% c("gear",effect))]
   colnames(SW)[which(colnames(SW) == effectlabel)] = "label"
@@ -939,7 +967,7 @@ ploteffects <- function(pred,
     geom_text(data = SW,aes(x=x,y=estimate, label = label), hjust = 1, size =3, colour = "black")  
 
   
-  ### OTHER FORMATTING OPTIONS
+  ## OTHER FORMATTING OPTIONS
   if(nostriptext) output = output + theme(strip.text.y = element_blank())
   if(noyaxis) output = output + theme(axis.text.y = element_blank(),
                                       axis.ticks.y = element_blank(),
@@ -968,7 +996,7 @@ ploteffects <- function(pred,
 
 
 
-
+### FUNCTION 4: COMPOSE PLOTS
 plotalleffects = function(diversityindicator, fig1, fig2, m1 =1, m2=0, m3=3){
   pred = rbind(
     predictions("surface_gillnet",diversityindicator),
@@ -1074,6 +1102,11 @@ plotalleffects = function(diversityindicator, fig1, fig2, m1 =1, m2=0, m3=3){
   dev.off()
 }
 
+
+
+
+
+### USE PREVIOUS FUNCTIONS TO COMPOSE PLOTS
 plotalleffects(diversityindicator = "weight", 
                fig1 = "FigS13_season_biomass",
                fig2 = "FigS14_other_effects_biomass",
