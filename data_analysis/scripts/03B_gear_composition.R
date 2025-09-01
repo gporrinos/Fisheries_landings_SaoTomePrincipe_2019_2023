@@ -108,7 +108,7 @@ library(ggpattern)
 
 
 #########################################################################
-#                     PLOT GEAR TYPES                       #
+#                            PLOT GEAR TYPES                            #
 #########################################################################
 
 
@@ -284,7 +284,7 @@ rm(a,b,c,geombarplot,geomemptybarplot,geompatternbarplot,ggtheme,gear,i,
 
 
 #########################################################################
-#                     Function to create histogram with relative frequencies                       #
+#       Function to create histogram with relative frequencies          #
 #########################################################################
 
 
@@ -337,9 +337,6 @@ hist_dat <- function(x,
 
 
 
-
-
-
 plothistograms <- function(dat,vline = FALSE,intercept = NULL){
   outplot = ggplot(dat = dat, 
                    aes(x=x, y = y, fill = Island) )
@@ -362,9 +359,11 @@ plothistograms <- function(dat,vline = FALSE,intercept = NULL){
 
 
 
+
 #########################################################################
-#                     PLOT GEAR TYPES                       #
+#                PLOT EFFORT INDICATORS OF H&L FISHING                  #
 #########################################################################
+
 
 
 
@@ -435,9 +434,6 @@ rm(hooksize,nlines, nhooks, dat, linegears)
 
 
 
-
-
-
 netgears <- effort[which(effort$gear_type %in% c("surface_gillnet","seine_net","demersal_gillnet")),]
 for(i in 1:4) netgears$gear_type[netgears$gear_type == gear_general[i]] <- gear_general_label[i]
 netgears$island <- as.character(netgears$island)
@@ -474,7 +470,7 @@ mesh_size   <- plothistograms(dat = dat)       +
   theme(plot.margin = margin(t = 4, r = 4, b = 4, l = 16, unit = "pt"))
 
 
-### STEP 6: CREATE FIGURE
+
 # Save to svg
 svg(file.path(figures,"FigS4_net_gears_effort.svg"), width = 11, height =4)
 cowplot::plot_grid(net_length,net_depth,mesh_size,ncol=3,align = "h", labels = c("A", "B","C"))
